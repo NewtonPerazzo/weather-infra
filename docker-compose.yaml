@@ -70,6 +70,22 @@ services:
       - redis
       - rabbitmq
 
+  authentication:
+    image: ghcr.io/newtonperazzo/fastapi-authentication:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql+pymysql://auth_user:${AUTH_DB_PASSWORD}@mysql:3306/authentication_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: fastapi-authentication
+      JWT_AUDIENCE: weather-analysis
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8080
+    depends_on:
+      - mysql
+
 volumes:
   mysql_data:
   rabbitmq_data:

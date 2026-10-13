@@ -86,6 +86,17 @@ services:
     depends_on:
       - mysql
 
+  gateway:
+    image: ghcr.io/newtonperazzo/weather-gateway:latest
+    restart: unless-stopped
+    environment:
+      AUTH_SERVICE_URL: http://authentication:8080
+      WEATHER_SERVICE_URL: http://weather-analysis:8080
+      REQUEST_TIMEOUT_SECONDS: 10
+    depends_on:
+      - authentication
+      - weather-analysis
+
 volumes:
   mysql_data:
   rabbitmq_data:

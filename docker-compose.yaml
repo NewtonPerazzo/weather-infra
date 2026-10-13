@@ -20,9 +20,12 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    hostname: rabbitmq
     restart: unless-stopped
     volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
 
 volumes:
   mysql_data:
+  rabbitmq_data:

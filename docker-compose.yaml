@@ -97,6 +97,14 @@ services:
       - authentication
       - weather-analysis
 
+  frontend:
+    image: ghcr.io/newtonperazzo/weather-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+
 volumes:
   mysql_data:
   rabbitmq_data:

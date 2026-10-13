@@ -25,7 +25,52 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+  
+  weather-analysis:
+    image: ghcr.io/newtonperazzo/weather-analysis:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OPEN_METEO_URL: https://geocoding-api.open-meteo.com
+      OPEN_METEO_FORECAST_URL: https://api.open-meteo.com
+      OPEN_METEO_ARCHIVE_URL: https://archive-api.open-meteo.com
+      DATABASE_URL: mysql+pymysql://weather_user:${WEATHER_DB_PASSWORD}@mysql:3306/weather_analysis_db
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://weather_worker:${RABBITMQ_PASSWORD}@rabbitmq:5672//
+      REPORTS_DIR: /var/lib/weather-reports
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8080
+    volumes:
+      - reports_data:/var/lib/weather-reports
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+
+  weather-worker:
+    image: ghcr.io/newtonperazzo/weather-analysis:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OPEN_METEO_URL: https://geocoding-api.open-meteo.com
+      OPEN_METEO_FORECAST_URL: https://api.open-meteo.com
+      OPEN_METEO_ARCHIVE_URL: https://archive-api.open-meteo.com
+      DATABASE_URL: mysql+pymysql://weather_user:${WEATHER_DB_PASSWORD}@mysql:3306/weather_analysis_db
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://weather_worker:${RABBITMQ_PASSWORD}@rabbitmq:5672//
+      REPORTS_DIR: /var/lib/weather-reports
+    command: >
+      celery -A config.celery:celery_app worker --loglevel=info --pool=solo
+    volumes:
+      - reports_data:/var/lib/weather-reports
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
 
 volumes:
   mysql_data:
   rabbitmq_data:
+  reports_data:
